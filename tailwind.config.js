@@ -10,6 +10,7 @@ export default {
       'lg-blue': '#94BDF2',
       'yellow': '#F5D20F',
       'green': '#00D639',
+      'white': '#ffffff'
     },
     extend: {},
   },
