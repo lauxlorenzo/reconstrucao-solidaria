@@ -6,8 +6,10 @@ import * as zod from 'zod'
 
 import { Eye, EyeSlash } from '@phosphor-icons/react'
 import Logo from '../assets/Logo.png'
+import Background from '../assets/Background_Login.png'
 import { Link } from 'react-router-dom'
-
+import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth'
+import { auth } from '../services/firebaseConfig'
 
 type PasswordType = 'password' | 'text'
 
@@ -18,12 +20,27 @@ const loginFormValidationSchema = zod.object({
 
 type NewLoginFormData = zod.infer<typeof loginFormValidationSchema>
 
-const Login = () => {
-  //Inputs
+const Register = () => {
   const [
     inputPasswordType, 
     setInputPasswordType
   ] = useState<PasswordType>('password')
+
+   //State e-mail & password
+   const [email, setEmail] = useState('');
+   const [password, setPassword] = useState('');
+ 
+   const [
+     createUserWithEmailAndPassword,
+     user,
+     loading,
+     error,
+   ] = useCreateUserWithEmailAndPassword(auth);
+ 
+   function handleSignIn(e: React.FormEvent<HTMLButtonElement>) {
+     e.preventDefault();
+     createUserWithEmailAndPassword(email, password);
+   }
 
   const handleTogglePasswordType = ( type:PasswordType ) => {
     switch ( type ) {
@@ -58,10 +75,10 @@ const Login = () => {
           <main className="flex flex-col mt-4 gap-10 w-full max-w-[384px]">
             <header className="flex flex-col gap-4 w-full max-w-[350px]">
               <h1 className="font-sans text-4xl font-bold text-gray-800">
-                Acesse a plataforma
+                Cadastre-se
               </h1>
               <p className="font-sans font-normal text-base text-gray-600">
-                Faça login ou registre-se para se conectar com a comunidade de doações.
+                Registre-se para se conectar com a comunidade de doações.
               </p>
             </header>
             <form 
@@ -84,6 +101,7 @@ const Login = () => {
                   id="email"
                   placeholder="Digite seu e-mail"
                   {...register('email')}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
                 { errors.email  && (
                   <span className="text-red text-sm"> {errors.email?.message} </span>)
@@ -96,12 +114,6 @@ const Login = () => {
                   htmlFor="password"
                 >
                   Senha
-                  <a 
-                    className="text-blue hover:text-lg-blue hover:underline"
-                    href="#"
-                  >
-                    Esqueceu a senha?
-                  </a>
                 </label>
                 <input
                   className={clsx('px-4 py-3 bg-white text-sm text-gray-800 leading-5 border border-gray-200 rounded placeholder:text-gray-200 outline-none focus:border-blue', {
@@ -112,6 +124,7 @@ const Login = () => {
                   type={inputPasswordType}
                   placeholder="Digiete sua senha"
                   {...register('password')}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   className="absolute right-4 top-11 text-gray-400"
@@ -128,14 +141,15 @@ const Login = () => {
               <footer className="flex flex-col gap-8">
                 <button
                   className="bg-blue text-white font-bold py-4 rounded outline-none hover:bg-lg-blue hover:ring-1 hover:ring-blue focus:ring-2 focus:ring-blue"
+                  onClick={handleSignIn}
                 >
-                  Entrar
+                  Registrar
                 </button>
                 <span className="text-gray-600">
-                  Ainda não tem uma conta? 
+                  Já possui uma conta? 
                 <Link 
                   className="text-blue hover:text-lg-blue hover:underline"
-                  to="/register"> Inscreva-se
+                  to="/login"> Faça Login
                 </Link> 
                 </span>
               </footer>
@@ -150,4 +164,4 @@ const Login = () => {
   )
 }
 
-export default Login;
+export default Register;
