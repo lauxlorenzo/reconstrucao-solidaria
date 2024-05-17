@@ -7,7 +7,7 @@ import * as zod from 'zod'
 import { Eye, EyeSlash } from '@phosphor-icons/react'
 import Logo from '../assets/Logo.png'
 import Background from '../assets/Background_Login.png'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth'
 import { auth } from '../services/firebaseConfig'
 
@@ -30,18 +30,25 @@ const Register = () => {
    const [email, setEmail] = useState('');
    const [password, setPassword] = useState('');
  
+   // Criar usuário
    const [
      createUserWithEmailAndPassword,
      user,
      loading,
      error,
    ] = useCreateUserWithEmailAndPassword(auth);
+
+   const navitage = useNavigate()
  
-   function handleSignIn(e: React.FormEvent<HTMLButtonElement>) {
+   // Função para criar o usuário
+   const handleSignIn = (e: React.FormEvent<HTMLFormElement>) => {
      e.preventDefault();
      createUserWithEmailAndPassword(email, password);
+     reset();
+     navitage("/login");
    }
 
+   //Ver a senha
   const handleTogglePasswordType = ( type:PasswordType ) => {
     switch ( type ) {
       case 'password':
@@ -58,14 +65,9 @@ const Register = () => {
     resolver: zodResolver(loginFormValidationSchema)
   })
 
-  const { register, handleSubmit, formState, reset } = loginForm
+  const { register, formState, reset } = loginForm
 
   const { errors } = formState
-
-  const handleLoginSubmit = (data: NewLoginFormData) => {
-    console.log(data)
-    reset()
-  }
 
   // HTML Página 
   return (
@@ -83,7 +85,7 @@ const Register = () => {
             </header>
             <form 
               className="flex flex-col gap-4"
-              onSubmit={handleSubmit(handleLoginSubmit)}
+              onSubmit={handleSignIn}
             >
               <div className="flex flex-col gap-2">
                 <label 
@@ -141,7 +143,6 @@ const Register = () => {
               <footer className="flex flex-col gap-8">
                 <button
                   className="bg-blue text-white font-bold py-4 rounded outline-none hover:bg-lg-blue hover:ring-1 hover:ring-blue focus:ring-2 focus:ring-blue"
-                  onClick={handleSignIn}
                 >
                   Registrar
                 </button>

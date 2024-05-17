@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom'
 
 type PasswordType = 'password' | 'text'
 
+//Validação dos campos de Login
 const loginFormValidationSchema = zod.object({
   email: zod.string().email('Digite um e-mail válido'),
   password: zod.string().nonempty('Digite a sua senha')
