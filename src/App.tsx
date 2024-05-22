@@ -1,10 +1,13 @@
+import React from 'react'
 import AppRoutes from './AppRoutes'
+import { BrowserRouter } from 'react-router-dom'
+import { AuthProvider } from './context/authContext'
 
-function App() {
+const App:React.FC = () => {
   return (
-    <>
-      <AppRoutes />
-    </>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
   )
 }
 
