@@ -1,33 +1,76 @@
-import { createContext, ReactNode, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useContext, useState, useEffect } from 'react'
+import { auth } from '../services/firebaseConfig'
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+} from 'firebase/auth'
 
-type Props = {
-  children?: ReactNode;
+interface IAuthProviderProps {
+  children: JSX.Element
 }
 
-type IAuthContext = {
-  authenticated: boolean;
-  setAuthenticated: (newState: boolean) => void
+const AuthContext = React.createContext({})
+
+export function useAuth(): any {
+  return useContext(AuthContext)
 }
 
-const initialValue = {
-  authenticated: false,
-  setAuthenticated: () => {}
-}
+export function AuthProvider({ children }: IAuthProviderProps): JSX.Element {
+  const [currentUser, setCurrentUser] = useState<any>()
+  const [loading, setLoading] = useState(true)
 
-const AuthContext = createContext<IAuthContext>(initialValue)
+  function signup(email: string, password: string): Promise<any> {
+    return auth.createUserWithEmailAndPassword(email, password)
+  }
 
-const AuthProvider = ({children}: Props) => {
-  const [authenticated, setAuthenticated] = useState(initialValue.authenticated)
+  function googleSignin(): Promise<any> {
+    const provider = new GoogleAuthProvider()
+    return signInWithPopup(auth, provider)
+  }
 
-  const navigate = useNavigate()
+  function login(email: string, password: string): Promise<any> {
+    return auth.signInWithEmailAndPassword(email, password)
+  }
+
+  function logout(): Promise<any> {
+    return auth.signOut()
+  }
+
+  function resetPassword(email: string): Promise<any> {
+    return auth.sendPasswordResetEmail(email)
+  }
+
+  function updateEmail(email: string): Promise<any> {
+    return currentUser.updateEmail(email)
+  }
+
+  function updatePassword(password: string): Promise<any> {
+    return currentUser.updatePassword(password)
+  }
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setCurrentUser(user)
+      setLoading(false)
+    })
+
+    return unsubscribe
+  }, [])
+
+  const value = {
+    currentUser,
+    login,
+    signup,
+    googleSignin,
+    logout,
+    resetPassword,
+    updateEmail,
+    updatePassword,
+  }
 
   return (
-    <AuthContext.Provider value={{authenticated, setAuthenticated}}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   )
 }
-
-export { AuthContext, AuthProvider }
-

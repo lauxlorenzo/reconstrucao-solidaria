@@ -1,29 +1,28 @@
-import { Routes as Router, Route, Navigate, Outlet } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import { useContext } from "react";
-import { AuthContext } from "./context/authContext";
+import Register from "./pages/Register";
+import { AuthProvider } from "./context/authContext";
+import AppContextProviders from "./context/AppContextProvider";
+import PrivateRoutes from "./components/PrivateRoutes";
+import ResetPassword from "./pages/ResetPassword";
 
-type Props ={}
-
-const PrivateRoutes = () => {
-  const { authenticated } = useContext(AuthContext)
-
-  if(!authenticated) return <Navigate to='/login' replace />
-
-  return <Outlet />
-}
-
-const AppRoutes = (props: Props) => {
+function AppRoutes() {
+  const providers = [AuthProvider]
   return (
     <Router>
-      <Route path="/login" element={<Login />} />
-      <Route element={<PrivateRoutes />}>
-        <Route path="/" element={<Home />} />
-      </Route>
+      <AppContextProviders components={providers}>
+        <Routes>
+          <Route element={<PrivateRoutes />}>
+            <Route element={<Home />} path="/" />
+          </Route>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/resetpassword" element={<ResetPassword />} />
+        </Routes>
+      </AppContextProviders>
     </Router>
   )
 }
-
 export default AppRoutes

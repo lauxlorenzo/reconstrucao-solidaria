@@ -6,7 +6,9 @@ import * as zod from 'zod'
 
 import { Eye, EyeSlash } from '@phosphor-icons/react'
 import Logo from '../assets/Logo.png'
-import { Link, useNavigate } from 'react-router-dom'
+import Background from '../assets/Background_Login.png'
+import { Link, json, useNavigate } from 'react-router-dom'
+
 import { useAuth } from '../context/authContext'
 
 
@@ -19,10 +21,10 @@ const loginFormValidationSchema = zod.object({
 
 type NewLoginFormData = zod.infer<typeof loginFormValidationSchema>
 
-export default function Login() {
+export default function Register() {
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
-  const { login, currentUser } = useAuth()
+  const { signup, currentUser } = useAuth()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -37,25 +39,22 @@ export default function Login() {
     try {
       setError('')
       setLoading(true)
-      await login(emailRef.current?.value, passwordRef.current?.value)
+      await signup(emailRef.current?.value, passwordRef.current?.value)
       navigate('/')
-    } catch(e: any) {
-      if (e.code === "auth/invalid-credential") {
-        setError('Senha ou e-mail incorreto')
+    } catch(error: any) {
+      if (error.code === "auth/email-already-in-use") {
+        setError('Esse endereço de e-mail já foi cadastrado')
       }
     }
 
     setLoading(false)
   }
 
-
-  //Inputs
   const [
     inputPasswordType, 
     setInputPasswordType
   ] = useState<PasswordType>('password')
 
-  // Ver senha
   const handleTogglePasswordType = ( type:PasswordType ) => {
     switch ( type ) {
       case 'password':
@@ -68,16 +67,14 @@ export default function Login() {
     }
   }
 
-  // Validação de campos
   const loginForm = useForm<NewLoginFormData>({
     resolver: zodResolver(loginFormValidationSchema)
   })
 
   const { register, formState, reset } = loginForm
+
   const { errors } = formState
 
-
-  
   // HTML Página 
   return (
     <div className="grid grid-cols-2 h-screen bg-gray-50">
@@ -86,10 +83,10 @@ export default function Login() {
           <main className="flex flex-col mt-4 gap-10 w-full max-w-[384px]">
             <header className="flex flex-col gap-4 w-full max-w-[350px]">
               <h1 className="font-sans text-4xl font-bold text-gray-800">
-                Acesse a plataforma
+                Cadastre-se
               </h1>
               <p className="font-sans font-normal text-base text-gray-600">
-                Faça login ou registre-se para se conectar com a comunidade de doações.
+                Registre-se para se conectar com a comunidade de doações.
               </p>
             </header>
             <form 
@@ -107,15 +104,18 @@ export default function Login() {
                   className={clsx('px-4 py-3 bg-white text-sm text-gray-800 leading-5 border border-gray-200 rounded placeholder:text-gray-200 outline-none focus:border-blue', {
                     'border-red': error,
                     'focus:border-red' : error,
-                  })} 
-                  type="email" 
-                  id="email"
+                  })}
+                  id="email-address"
                   name="email"
-                  placeholder="Digite seu e-mail"
+                  type="email"
                   autoComplete="email"
                   ref={emailRef}
                   required
+                  placeholder="Digite seu e-mail"
                 />
+                { error  && (
+                  <span className="text-red text-sm"> {error} </span>)
+                }
               </div>
 
               <div className="flex flex-col gap-2 relative">
@@ -124,22 +124,18 @@ export default function Login() {
                   htmlFor="password"
                 >
                   Senha
-                  <Link className="text-blue hover:text-lg-blue hover:underline" to="/resetpassword">
-                    Esqueceu a senha?
-                  </Link>
                 </label>
                 <input
-                  className={clsx('px-4 py-3 bg-white text-sm text-gray-800 leading-5 border border-gray-200 rounded placeholder:text-gray-200 outline-none focus:border-blue', {
-                    'border-red': error,
-                    'focus:border-red' : error,
-                  })}  
                   id="password"
                   name="password"
                   type={inputPasswordType}
-                  placeholder="Digite sua senha"
                   ref={passwordRef}
-                  autoComplete="current-password"
                   required
+                  className={clsx('px-4 py-3 bg-white text-sm text-gray-800 leading-5 border border-gray-200 rounded placeholder:text-gray-200 outline-none focus:border-blue', {
+                     'border-red': errors.password,
+                    'focus:border-red' : errors.password,
+                  })}  
+                  placeholder="Digite sua senha"
                 />
                 <button
                   className="absolute right-4 top-11 text-gray-400"
@@ -148,8 +144,8 @@ export default function Login() {
                 >
                   { inputPasswordType === 'password' ? <EyeSlash /> : <Eye /> }
                 </button>
-                { error  && (
-                  <span className="text-red text-sm"> {error} </span>)
+                { errors.password  && (
+                  <span className="text-red text-sm"> {errors.password?.message} </span>)
                 }
               </div>
 
@@ -157,13 +153,13 @@ export default function Login() {
                 <button
                   className="bg-blue text-white font-bold py-4 rounded outline-none hover:bg-lg-blue hover:ring-1 hover:ring-blue focus:ring-2 focus:ring-blue"
                 >
-                  Entrar
+                  Registrar
                 </button>
                 <span className="text-gray-600">
-                  Ainda não tem uma conta? 
+                  Já possui uma conta? 
                 <Link 
                   className="text-blue hover:text-lg-blue hover:underline"
-                  to="/register"> Inscreva-se
+                  to="/login"> Faça Login
                 </Link> 
                 </span>
               </footer>
