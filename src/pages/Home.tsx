@@ -1,13 +1,15 @@
-import React from 'react';
-import { useAuth } from '../context/authContext';
 import Header from '../components/Header';
+import Filter from '../components/Filter';
 
 type Props = {}
 
 
 const Home = (props: Props) => {
   return (
-    <Header />
+    <>
+      <Header />
+      <Filter />
+    </>
   )
 }
 

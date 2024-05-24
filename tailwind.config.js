@@ -15,6 +15,10 @@ module.exports = {
       screens: {
         "2xl": "1400px",
       },
+
+      fontFamily: {
+        'inter': ['Inter', 'sans-serif']
+      }
     },
     extend: {
       colors: {
@@ -54,7 +58,7 @@ module.exports = {
         'blue': '#2957A4',
         'lg-blue': '#94BDF2',
         'yellow': '#F5D20F',
-        'green': '#76C04E',
+        'green': '#00D639',
         'white': '#ffffff',
 
         gray: {
