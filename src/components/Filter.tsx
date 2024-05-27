@@ -1,5 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus } from "lucide-react"
+import CreateButton from "./CreateButton"
 
 const Filter = () => {
   return (
@@ -28,12 +28,7 @@ const Filter = () => {
       </div>
 
       <div>
-        <button className="bg-green py-2 px-4 rounded-full hover:bg-opacity-80">
-          <span className="flex flex-row gap-1 items-center text-white">
-            <Plus size={18} />
-            Criar
-          </span>
-        </button>
+        <CreateButton />
       </div>
     </div>
   )
