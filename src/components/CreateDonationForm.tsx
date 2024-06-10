@@ -3,7 +3,9 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useState } from "react"
 
-import { Paperclip, FileImage } from "lucide-react"
+import {v4 as uuidv4} from 'uuid';
+
+import { Paperclip, FileImage, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -27,6 +29,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
+import { useDropzone } from "react-dropzone"
+
 
 
 const MAX_FILE_SIZE = 1024 * 1024 * 5;
@@ -36,7 +40,7 @@ const ACCEPTED_IMAGE_MIME_TYPES = [
   "image/png",
   "image/webp",
 ];
-const ACCEPTED_IMAGE_TYPES = ["jpeg", "jpg", "png", "webp"];
+
 
 // Definindo esquema de cada campo
 const formSchema = z.object({
@@ -60,34 +64,57 @@ const formSchema = z.object({
 
   adImage: z
     .any()
-    .refine((files) => {
-      return files?.[0]?.size <= MAX_FILE_SIZE;
-    }, `Tamanho máximo de 5MB.`)
-    .refine(
-      (files) => ACCEPTED_IMAGE_MIME_TYPES.includes(files?.[0]?.type),
-      "Apenas .jpg, .jpeg, .png e .webp"
-    ),
+    .refine((files) => files?.length >= 1, { message: 'Você precisa enviar uma ou mais imagens.' })
+    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, { message: "Tamanho máximo de 5MB." })
+    .refine((files) => ACCEPTED_IMAGE_MIME_TYPES.includes(files?.[0]?.type), { message: "Apenas .jpg, .jpeg, .png e .webp" }),
 })
 
 const CreateDonationForm = () => {
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
-  // 1. Define your form.
+  // Definindo o formulário
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       city: "",
       description: "",
-      adImage: undefined,
+      adImage: "",
       condition: "",
     },
   })
 
-  // 2. Define a submit handler.
+  // Função executada quando o formulário é enviado
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values)
   }
+
+  // Drop-zone
+  const [files, setFiles] = useState<any>([]);
+  const { getRootProps, getInputProps, acceptedFiles } = useDropzone({
+    maxFiles: 5,
+
+    onDrop: (acceptedFiles) => {
+      setFiles(
+        acceptedFiles.map((file) =>
+          Object.assign(file, {
+            preview: URL.createObjectURL(file),
+            id: uuidv4()
+          })
+        )
+      )
+    }
+  })
+
+  const Preview = files.map((file: any) => (
+    <div className="w-20 h-20 border-2 border-zinc-300 rounded-lg flex">
+      <button type='button' className="absolute z-10 float-right"><X /></button>
+      <img src={file.preview} className=""/>
+    </div>
+  ))
+
+  const acceptedFileItems = acceptedFiles.map((file) => (
+    <li key={file.name}>{file.name}</li>
+  ));
 
   return (
     <Form {...form}>
@@ -156,24 +183,7 @@ const CreateDonationForm = () => {
           )}
         />
 
-        <div className={`flex col-span-4 p-4 rounded border border-input items-center justify-center`} >
-          <div className={`flex h-[fit-content]`}>
-            {selectedImage ? (
-              <div className="md:max-w-[90px]">
-                <img
-                  src={URL.createObjectURL(selectedImage)}
-                  alt="Selected"
-                />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center">
-                <div className="p-3 flex justify-center items-center">
-                  <FileImage size={56} color="#64748B" />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+
 
         <FormField
           control={form.control}
@@ -181,31 +191,15 @@ const CreateDonationForm = () => {
           render={({ field }) => (
             <FormItem className="col-span-4">
               <FormControl>
-                <Button size="lg" type="button">
-                  <input
-                    type="file"
-                    className="hidden"
-                    id="fileInput"
-                    accept="image/*"
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    onChange={(e) => {
-                      field.onChange(e.target.files);
-                      setSelectedImage(e.target.files?.[0] || null);
-                    }}
-                    ref={field.ref}
-                  />
-                  <label
-                    htmlFor="fileInput"
-                    className="bg-blue-500 hover:bg-blue-600 text-neutral-90  rounded-md cursor-pointer inline-flex items-center"
-                  >
-                    <Paperclip />
-                    <span className="whitespace-nowrap ml-2">
-                      Escolha suas imagens
-                    </span>
-                  </label>
-                </Button>
+                <div {...field} {...getRootProps({ className: "bg-zinc-200 rounded-lg border-dashed border-2 border-zinc-300 flex justify-center items-center px-2 py-8 hover:bg-zinc-300 hover:border-zinc-400 hover:cursor-pointer transition-all" })}>
+                  <input {...getInputProps()} />
+                  <p className="font-semibold text-zinc-400">Clique ou arraste para enviar</p>
+                </div>
               </FormControl>
+
+              <div>
+                {Preview}
+              </div>
               <FormMessage />
             </FormItem>
           )}
