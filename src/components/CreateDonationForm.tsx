@@ -3,15 +3,12 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useState } from "react"
 
-import {v4 as uuidv4} from 'uuid';
-
-import { Paperclip, FileImage, X } from "lucide-react"
+import { X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,7 +28,16 @@ import { Textarea } from "@/components/ui/textarea"
 
 import { useDropzone } from "react-dropzone"
 
+import { v4 as uuidv4 } from 'uuid';
 
+
+
+interface IFile {
+  id: string;
+  name: string;
+  preview: string;
+  url: string;
+}
 
 const MAX_FILE_SIZE = 1024 * 1024 * 5;
 const ACCEPTED_IMAGE_MIME_TYPES = [
@@ -69,6 +75,8 @@ const formSchema = z.object({
     .refine((files) => ACCEPTED_IMAGE_MIME_TYPES.includes(files?.[0]?.type), { message: "Apenas .jpg, .jpeg, .png e .webp" }),
 })
 
+
+
 const CreateDonationForm = () => {
 
   // Definindo o formulário
@@ -90,7 +98,7 @@ const CreateDonationForm = () => {
 
   // Drop-zone
   const [files, setFiles] = useState<any>([]);
-  const { getRootProps, getInputProps, acceptedFiles } = useDropzone({
+  const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 5,
 
     onDrop: (acceptedFiles) => {
@@ -98,23 +106,30 @@ const CreateDonationForm = () => {
         acceptedFiles.map((file) =>
           Object.assign(file, {
             preview: URL.createObjectURL(file),
-            id: uuidv4()
+            id: uuidv4(),
           })
         )
       )
     }
   })
 
-  const Preview = files.map((file: any) => (
-    <div className="w-20 h-20 border-2 border-zinc-300 rounded-lg flex">
-      <button type='button' className="absolute z-10 float-right"><X /></button>
-      <img src={file.preview} className=""/>
-    </div>
-  ))
+  const Preview = files.map((file: IFile) => (
+    <li key={file.id} className="w-20 h-20 border-2 border-zinc-300 rounded-lg flex">
+      <button
+        type='button'
+        className="absolute z-10 float-right"
+      //onClick={() => deleteFile(file.id)}
+      >
+        <X />
+      </button>
 
-  const acceptedFileItems = acceptedFiles.map((file) => (
-    <li key={file.name}>{file.name}</li>
+      <img
+        src={file.preview}
+        className=""
+      />
+    </li>
   ));
+
 
   return (
     <Form {...form}>
@@ -184,7 +199,6 @@ const CreateDonationForm = () => {
         />
 
 
-
         <FormField
           control={form.control}
           name="adImage"
@@ -200,6 +214,7 @@ const CreateDonationForm = () => {
               <div>
                 {Preview}
               </div>
+
               <FormMessage />
             </FormItem>
           )}
