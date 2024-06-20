@@ -1,9 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { useState } from "react"
-
-import { X } from "lucide-react"
+import { useCallback, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -28,16 +26,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 import { useDropzone } from "react-dropzone"
 
-import { v4 as uuidv4 } from 'uuid';
 
-
-
-interface IFile {
-  id: string;
-  name: string;
-  preview: string;
-  url: string;
-}
 
 const MAX_FILE_SIZE = 1024 * 1024 * 5;
 const ACCEPTED_IMAGE_MIME_TYPES = [
@@ -46,6 +35,7 @@ const ACCEPTED_IMAGE_MIME_TYPES = [
   "image/png",
   "image/webp",
 ];
+
 
 
 // Definindo esquema de cada campo
@@ -76,8 +66,8 @@ const formSchema = z.object({
 })
 
 
-
 const CreateDonationForm = () => {
+  const [preview, setPreview] = useState<string[] | null>([]);
 
   // Definindo o formulário
   const form = useForm<z.infer<typeof formSchema>>({
@@ -86,49 +76,40 @@ const CreateDonationForm = () => {
       name: "",
       city: "",
       description: "",
-      adImage: "",
+      adImage: undefined,
       condition: "",
     },
   })
 
+  // Drop-zone
+  const onDrop = useCallback((acceptedFiles: Array<File>) => {
+    const file = new FileReader;
+    let images: Array<string> = [];
+
+    if (acceptedFiles) {
+      for (let i = 0; i < acceptedFiles.length; i++) {
+        images.push(URL.createObjectURL(acceptedFiles[i]));
+      }
+    }
+
+    setPreview(images)
+    file.readAsDataURL(acceptedFiles[0])
+  }, [])
+
+
+  const { acceptedFiles, getRootProps, getInputProps, isDragActive } = useDropzone({
+    maxFiles: 5,
+    onDrop
+  });
+
+
   // Função executada quando o formulário é enviado
   function onSubmit(values: z.infer<typeof formSchema>) {
+    if (typeof acceptedFiles[0] === 'undefined') return;
+
     console.log(values)
+    console.log(acceptedFiles)
   }
-
-  // Drop-zone
-  const [files, setFiles] = useState<any>([]);
-  const { getRootProps, getInputProps } = useDropzone({
-    maxFiles: 5,
-
-    onDrop: (acceptedFiles) => {
-      setFiles(
-        acceptedFiles.map((file) =>
-          Object.assign(file, {
-            preview: URL.createObjectURL(file),
-            id: uuidv4(),
-          })
-        )
-      )
-    }
-  })
-
-  const Preview = files.map((file: IFile) => (
-    <li key={file.id} className="w-20 h-20 border-2 border-zinc-300 rounded-lg flex">
-      <button
-        type='button'
-        className="absolute z-10 float-right"
-      //onClick={() => deleteFile(file.id)}
-      >
-        <X />
-      </button>
-
-      <img
-        src={file.preview}
-        className=""
-      />
-    </li>
-  ));
 
 
   return (
@@ -205,15 +186,25 @@ const CreateDonationForm = () => {
           render={({ field }) => (
             <FormItem className="col-span-4">
               <FormControl>
-                <div {...field} {...getRootProps({ className: "bg-zinc-200 rounded-lg border-dashed border-2 border-zinc-300 flex justify-center items-center px-2 py-8 hover:bg-zinc-300 hover:border-zinc-400 hover:cursor-pointer transition-all" })}>
-                  <input {...getInputProps()} />
-                  <p className="font-semibold text-zinc-400">Clique ou arraste para enviar</p>
+                <div {...getRootProps({ className: "bg-zinc-200 rounded-lg border-dashed border-2 border-zinc-300 flex justify-center items-center px-2 py-8 hover:bg-zinc-300 hover:border-zinc-400 hover:cursor-pointer transition-all" })}>
+                  <input {...field} {...getInputProps()} onChange={(e) => {field.onChange(e.target.files)}} />
+                  {
+                    isDragActive ?
+                      <p className="font-semibold text-zinc-400">Solte os arquivos aqui...</p> :
+                      <p className="font-semibold text-zinc-400">Clique ou arraste para enviar</p>
+                  }
                 </div>
               </FormControl>
 
-              <div>
-                {Preview}
-              </div>
+              {preview && (
+                <div className="flex flex-row gap-2">
+                  {preview.map((img, i) => {
+                    return (
+                      <img src={img} key={i} className="w-20 h-20 border-2 border-zinc-300 rounded-lg flex" alt="Upload preview" />
+                    )
+                  })}
+                </div>
+              )}
 
               <FormMessage />
             </FormItem>

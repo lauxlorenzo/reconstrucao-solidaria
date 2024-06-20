@@ -6,8 +6,7 @@ import * as zod from 'zod'
 
 import { Eye, EyeSlash } from '@phosphor-icons/react'
 import Logo from '../assets/Logo.png'
-import Background from '../assets/Background_Login.png'
-import { Link, json, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../context/authContext'
 
